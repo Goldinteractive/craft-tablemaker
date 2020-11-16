@@ -173,7 +173,7 @@ class TableMakerField extends Field
 
         return $value;
     }
-    
+
 
     /**
      * Modifies an element query.
@@ -190,7 +190,6 @@ class TableMakerField extends Field
      */
     public function serializeValue($value, ElementInterface $element = null)
     {
-
         if ( !empty($value['rows']) && is_array($value['rows']) )
         {
             // drop keys from the rows array
@@ -260,16 +259,17 @@ class TableMakerField extends Field
 
         // make input
         $input = '<input class="table-maker-field" type="hidden" name="'.$name.'" value="">';
-        
+
         // get columns from db or fall back to default
         if ( !empty($value['columns']) )
         {
             foreach ($value['columns'] as $key => $val) {
                 $columns['col'.$key] = array(
                     'heading' => $val['heading'],
+                    'fieldType' => isset($val['fieldType']) ? $val['fieldType'] : null,
                     'align' => $val['align'],
                     'width' => $val['width'],
-                    'type' => 'singleline'
+                    'type' => isset($val['fieldType']) && !empty($val['fieldType']) ? $val['fieldType'] : 'singleline',
                 );
             }
         }
@@ -278,13 +278,13 @@ class TableMakerField extends Field
             $columns = array(
                 'col0' => array(
                     'heading' => '',
+                    'fieldType' => '',
                     'align' => '',
                     'width' => '',
                     'type' => 'singleline'
                 )
             );
         }
-
 
         // get rows from db or fall back to default
         if ( !empty($value['rows']) )
@@ -293,6 +293,17 @@ class TableMakerField extends Field
             // and 'col' to the cells' keys
             foreach ($value['rows'] as $rowKey => $rowVal) {
                 foreach ($rowVal as $colKey => $colVal) {
+                    if ($columns['col'.$colKey]['type'] == 'html') {
+                        $skeleton = Craft::$app->fields->createField([
+                            'type'           => 'craft\redactor\Field',
+                            'handle'         => 'table[rows][row'.$rowKey.'][col'.$colKey.']', // todo move field name "table" to config
+                            'name'           => 'table[rows][row'.$rowKey.'][col'.$colKey.']',
+                            'redactorConfig' => 'Project.json', // todo config
+                        ]);
+
+                        $colVal = $skeleton->getInputHtml($colVal);
+                    }
+
                     $rows['row'.$rowKey]['col'.$colKey] = $colVal;
                 }
             }
@@ -307,6 +318,15 @@ class TableMakerField extends Field
             'heading' => array(
                 'heading' => Craft::t('tablemaker', 'Heading'),
                 'type' => 'singleline'
+            ),
+            'fieldType' => array(
+                'heading' => Craft::t('tablemaker', 'Field type'),
+                'class'   => 'thin',
+                'type'    => 'select',
+                'options' => array(
+                    'singleline'   => Craft::t('tablemaker', 'Text'),
+                    'html' => Craft::t('tablemaker', 'Wysiwyg'), // todo only if redactor is installed
+                )
             ),
             'width' => array(
                 'heading' => Craft::t('tablemaker', 'Width'),
