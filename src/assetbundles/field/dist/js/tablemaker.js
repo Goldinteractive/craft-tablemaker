@@ -103,7 +103,6 @@ Craft.TableMaker = Garnish.Base.extend(
         this.$rowsTable = $('#'+this.rowsTableId);
         this.$input = $('#'+fieldId+'-field').find('input.table-maker-field');
 
-
         // set up columns table
         this.initColumnsTable();
 
@@ -123,12 +122,68 @@ Craft.TableMaker = Garnish.Base.extend(
 
     },
 
-    onRowsAddRow: function()
+    onRowsAddRow: function($tr)
     {
 
-        this.bindRowsTableTextChanges();
-        this.makeDataBlob();
+      this.bindRowsTableTextChanges();
+      this.makeDataBlob();
 
+      var rowNum = $tr.data('id');
+
+      if (this.rows.hasOwnProperty(rowNum)) {
+        var textareas = $tr.find('.html-cell textarea');
+
+        for (var k = 0; k < textareas.length; k++) {
+          var handle = 'textarea-' + rowNum + '-' + k;
+
+          textareas[k].id = handle;
+
+          // todo replace hardcoded config
+          new Craft.RedactorInput({
+            "id": handle,
+            "linkOptions": [],
+            "volumes": [
+              "folder:2818c917-eabd-4984-bd00-6fd10907f2b1"
+            ],
+            "transforms": [],
+            "elementSiteId": "1",
+            "redactorConfig": {
+              "buttons": [
+                "html",
+                "format",
+                "bold",
+                "lists",
+                "link",
+                "file"
+              ],
+              "formatting": [
+                "p",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "h6"
+              ],
+              "formattingAdd": {
+                "highlighted-text": {
+                  "title": "Spitzmarke",
+                  "api": "module.inline.format",
+                  "args": {
+                    "tag": "p",
+                    "class": "dateline",
+                    "type": "toggle"
+                  }
+                }
+              },
+              "pastePlainText": true,
+              "toolbarFixed": true,
+              "linkNewTab": true
+            },
+            "redactorLang": "de",
+            "showAllUploaders": false
+          });
+        }
+      }
     },
 
     bindColumnsTableChanges: function()
