@@ -11,13 +11,12 @@
 
 namespace supercool\tablemaker\fields;
 
-use craft\redactor\assets\redactor\RedactorAsset;
 use supercool\tablemaker\assetbundles\field\FieldAsset;
 
 use Craft;
 use craft\base\ElementInterface;
 use craft\base\Field;
-use craft\helpers\Db;
+use supercool\tablemaker\TableMaker;
 use yii\db\Schema;
 use craft\helpers\Json;
 use craft\helpers\Template;
@@ -245,8 +244,9 @@ class TableMakerField extends Field
     public function getInputHtml($value, ElementInterface $element = null): string
     {
         $view = Craft::$app->getView();
+        $plugin = TableMaker::getInstance();
 
-        $isRedactorInstalled = $this->isRedactorInstalled();
+        $isRedactorInstalled = $plugin->redactor->isRedactorInstalled();
 
         // Register our asset bundle
         $view->registerAssetBundle(FieldAsset::class);
@@ -300,7 +300,7 @@ class TableMakerField extends Field
                             'type'           => 'craft\redactor\Field',
                             'handle'         => $this->handle.'[rows][row'.$rowKey.'][col'.$colKey.']',
                             'name'           => $this->handle.'[rows][row'.$rowKey.'][col'.$colKey.']',
-                            'redactorConfig' => $this->getRedactorConfigFilename(),
+                            'redactorConfig' => $plugin->redactor->getRedactorConfigFilename(),
                         ]);
 
                         $colVal = $skeleton->getInputHtml($colVal);
@@ -323,7 +323,7 @@ class TableMakerField extends Field
 
         if ($isRedactorInstalled) {
             $fieldTypeOptions['html'] = Craft::t('tablemaker', 'Wysiwyg');
-            $redactorConfig = $this->getRedactorConfig();
+            $redactorConfig = $plugin->redactor->getRedactorConfig();
         }
 
         // prep col settings
@@ -398,62 +398,5 @@ class TableMakerField extends Field
         ));
 
         return $input . $columnsField . $rowsField;
-    }
-
-    private function getRedactorConfigFilename()
-    {
-        //todo filename from settings
-        return 'Project.json';
-    }
-
-    /**
-     * Here we rebuild the settings from \craft\redactor\Field::getInputHtml
-     */
-    private function getRedactorConfig()
-    {
-        $view = Craft::$app->getView();
-        $site = Craft::$app->sites->getCurrentSite();
-        $redactorEditorConfig = $this->getRedactorConfigFile('redactor', $this->getRedactorConfigFilename());
-
-        // figure out which language we ended up with
-        /** @var RedactorAsset $bundle */
-        $bundle = $view->getAssetManager()->getBundle(RedactorAsset::class);
-        $redactorLang = $bundle::$redactorLanguage ?? 'en';
-
-        // maybe add linkOptions and volumes later,
-        // it would require a whole lot of copy / paste from the redactor plugin
-        return [
-            'id'               => null, // is set in js
-            'linkOptions'      => [],
-            'volumes'          => [],
-            'transforms'       => [],
-            'elementSiteId'    => $site->id,
-            'redactorConfig'   => $redactorEditorConfig,
-            'redactorLang'     => $redactorLang,
-            'showAllUploaders' => false,
-        ];
-    }
-
-    /**
-     * Copied from \craft\redactor\Field::_getConfig
-     */
-    private function getRedactorConfigFile(string $dir, string $file = null)
-    {
-        if (!$file) {
-            return false;
-        }
-
-        $path = Craft::$app->getPath()->getConfigPath() . DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR . $file;
-
-        if (!is_file($path)) {
-            return false;
-        }
-
-        return Json::decode(file_get_contents($path));
-    }
-
-    public function isRedactorInstalled() {
-        // check if the plugin is installed & enabled
-        return Craft::$app->plugins->isPluginEnabled('redactor');
     }
 }

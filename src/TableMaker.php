@@ -21,12 +21,15 @@ use craft\events\RegisterComponentTypesEvent;
 
 use supercool\tablemaker\fields\TableMakerField;
 
+use supercool\tablemaker\services\RedactorService;
 use yii\base\Event;
 
 /**
  * @author    Supercool Ltd
  * @package   TableMaker
  * @since     1.0.0
+ *
+ * @property  RedactorService $redactor
  */
 
 class TableMaker extends Plugin
@@ -35,7 +38,7 @@ class TableMaker extends Plugin
     // =========================================================================
 
     public static $plugin;
-    
+
 
     // Public Methods
     // =========================================================================
@@ -44,6 +47,12 @@ class TableMaker extends Plugin
     {
         parent::init();
         self::$plugin = $this;
+
+        $this->setComponents(
+            [
+                'redactor' => services\RedactorService::class,
+            ]
+        );
 
         // Register our fields
         Event::on(
