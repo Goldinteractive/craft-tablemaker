@@ -11,7 +11,7 @@
 
 namespace supercool\tablemaker\fields;
 
-use supercool\tablemaker\TableMaker;
+use craft\redactor\assets\redactor\RedactorAsset;
 use supercool\tablemaker\assetbundles\field\FieldAsset;
 
 use Craft;
@@ -293,12 +293,13 @@ class TableMakerField extends Field
             // and 'col' to the cells' keys
             foreach ($value['rows'] as $rowKey => $rowVal) {
                 foreach ($rowVal as $colKey => $colVal) {
+                    //todo and redactor is installed
                     if ($columns['col'.$colKey]['type'] == 'html') {
                         $skeleton = Craft::$app->fields->createField([
                             'type'           => 'craft\redactor\Field',
-                            'handle'         => 'table[rows][row'.$rowKey.'][col'.$colKey.']', // todo move field name "table" to config
-                            'name'           => 'table[rows][row'.$rowKey.'][col'.$colKey.']',
-                            'redactorConfig' => 'Project.json', // todo config
+                            'handle'         => $this->handle.'[rows][row'.$rowKey.'][col'.$colKey.']',
+                            'name'           => $this->handle.'[rows][row'.$rowKey.'][col'.$colKey.']',
+                            'redactorConfig' => $this->getRedactorConfigFilename(),
                         ]);
 
                         $colVal = $skeleton->getInputHtml($colVal);
@@ -312,6 +313,8 @@ class TableMakerField extends Field
         {
             $rows = array('row0' => array());
         }
+
+        $redactorConfig = $this->getRedactorConfig();
 
         // prep col settings
         $columnSettings = array(
@@ -355,7 +358,8 @@ class TableMakerField extends Field
             Json::encode($view->namespaceInputName($rowsInput), JSON_UNESCAPED_UNICODE).', ' .
             Json::encode($columns, JSON_UNESCAPED_UNICODE).', ' .
             Json::encode($rows, JSON_UNESCAPED_UNICODE).', ' .
-            Json::encode($columnSettings, JSON_UNESCAPED_UNICODE) .
+            Json::encode($columnSettings, JSON_UNESCAPED_UNICODE) . ', ' .
+            Json::encode($redactorConfig, JSON_UNESCAPED_UNICODE) .
         ');');
 
         // render the two tables
@@ -389,5 +393,51 @@ class TableMakerField extends Field
         return $input . $columnsField . $rowsField;
     }
 
+    private function getRedactorConfigFilename()
+    {
+        //todo filename from settings
+        return 'Project.json';
+    }
 
+    /**
+     * Here we rebuild the settings from \craft\redactor\Field::getInputHtml
+     */
+    private function getRedactorConfig()
+    {
+        $view = Craft::$app->getView();
+        $site = Craft::$app->sites->getCurrentSite();
+        $redactorEditorConfig = $this->getRedactorConfigFile('redactor', $this->getRedactorConfigFilename());
+
+        // figure out which language we ended up with
+        /** @var RedactorAsset $bundle */
+        $bundle = $view->getAssetManager()->getBundle(RedactorAsset::class);
+        $redactorLang = $bundle::$redactorLanguage ?? 'en';
+
+        // maybe add linkOptions and volumes later,
+        // it would require a whole lot of copy / paste from the redactor plugin
+        return [
+            'id'               => null, // is set in js
+            'linkOptions'      => [],
+            'volumes'          => [],
+            'transforms'       => [],
+            'elementSiteId'    => $site->id,
+            'redactorConfig'   => $redactorEditorConfig,
+            'redactorLang'     => $redactorLang,
+            'showAllUploaders' => false,
+        ];
+    }
+
+    /**
+     * Copied from \craft\redactor\Field::_getConfig
+     */
+    private function getRedactorConfigFile(string $dir, string $file = null)
+    {
+        $path = Craft::$app->getPath()->getConfigPath() . DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR . $file;
+
+        if (!is_file($path)) {
+            return false;
+        }
+
+        return Json::decode(file_get_contents($path));
+    }
 }
