@@ -246,6 +246,8 @@ class TableMakerField extends Field
     {
         $view = Craft::$app->getView();
 
+        $isRedactorInstalled = $this->isRedactorInstalled();
+
         // Register our asset bundle
         $view->registerAssetBundle(FieldAsset::class);
 
@@ -293,8 +295,7 @@ class TableMakerField extends Field
             // and 'col' to the cells' keys
             foreach ($value['rows'] as $rowKey => $rowVal) {
                 foreach ($rowVal as $colKey => $colVal) {
-                    //todo and redactor is installed
-                    if ($columns['col'.$colKey]['type'] == 'html') {
+                    if ($isRedactorInstalled && $columns['col'.$colKey]['type'] == 'html') {
                         $skeleton = Craft::$app->fields->createField([
                             'type'           => 'craft\redactor\Field',
                             'handle'         => $this->handle.'[rows][row'.$rowKey.'][col'.$colKey.']',
@@ -314,7 +315,16 @@ class TableMakerField extends Field
             $rows = array('row0' => array());
         }
 
-        $redactorConfig = $this->getRedactorConfig();
+        $redactorConfig = [];
+
+        $fieldTypeOptions = [
+            'singleline' => Craft::t('tablemaker', 'Text'),
+        ];
+
+        if ($isRedactorInstalled) {
+            $fieldTypeOptions['html'] = Craft::t('tablemaker', 'Wysiwyg');
+            $redactorConfig = $this->getRedactorConfig();
+        }
 
         // prep col settings
         $columnSettings = array(
@@ -326,10 +336,7 @@ class TableMakerField extends Field
                 'heading' => Craft::t('tablemaker', 'Field type'),
                 'class'   => 'thin',
                 'type'    => 'select',
-                'options' => array(
-                    'singleline'   => Craft::t('tablemaker', 'Text'),
-                    'html' => Craft::t('tablemaker', 'Wysiwyg'), // todo only if redactor is installed
-                )
+                'options' => $fieldTypeOptions
             ),
             'width' => array(
                 'heading' => Craft::t('tablemaker', 'Width'),
@@ -432,6 +439,10 @@ class TableMakerField extends Field
      */
     private function getRedactorConfigFile(string $dir, string $file = null)
     {
+        if (!$file) {
+            return false;
+        }
+
         $path = Craft::$app->getPath()->getConfigPath() . DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR . $file;
 
         if (!is_file($path)) {
@@ -439,5 +450,10 @@ class TableMakerField extends Field
         }
 
         return Json::decode(file_get_contents($path));
+    }
+
+    public function isRedactorInstalled() {
+        // check if the plugin is installed & enabled
+        return Craft::$app->plugins->isPluginEnabled('redactor');
     }
 }
