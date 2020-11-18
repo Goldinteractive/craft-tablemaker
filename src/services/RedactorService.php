@@ -29,8 +29,13 @@ class RedactorService extends Component
 
     public function getRedactorConfigFilename()
     {
-        //todo filename from settings
-        return 'Project.json';
+        $config = Craft::$app->config->getConfigFromFile('tablemaker');
+
+        if (isset($config['redactorConfig'])) {
+            return $config['redactorConfig'];
+        }
+
+        return null;
     }
 
     /**
