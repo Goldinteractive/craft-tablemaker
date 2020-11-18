@@ -127,63 +127,7 @@ Craft.TableMaker = Garnish.Base.extend(
 
       this.bindRowsTableTextChanges();
       this.makeDataBlob();
-
-      var rowNum = $tr.data('id');
-
-      if (this.rows.hasOwnProperty(rowNum)) {
-        var textareas = $tr.find('.html-cell textarea');
-
-        for (var k = 0; k < textareas.length; k++) {
-          var handle = 'textarea-' + rowNum + '-' + k;
-
-          textareas[k].id = handle;
-
-          // todo replace hardcoded config
-          new Craft.RedactorInput({
-            "id": handle,
-            "linkOptions": [],
-            "volumes": [
-              "folder:2818c917-eabd-4984-bd00-6fd10907f2b1"
-            ],
-            "transforms": [],
-            "elementSiteId": "1",
-            "redactorConfig": {
-              "buttons": [
-                "html",
-                "format",
-                "bold",
-                "lists",
-                "link",
-                "file"
-              ],
-              "formatting": [
-                "p",
-                "h2",
-                "h3",
-                "h4",
-                "h5",
-                "h6"
-              ],
-              "formattingAdd": {
-                "highlighted-text": {
-                  "title": "Spitzmarke",
-                  "api": "module.inline.format",
-                  "args": {
-                    "tag": "p",
-                    "class": "dateline",
-                    "type": "toggle"
-                  }
-                }
-              },
-              "pastePlainText": true,
-              "toolbarFixed": true,
-              "linkNewTab": true
-            },
-            "redactorLang": "de",
-            "showAllUploaders": false
-          });
-        }
-      }
+      this.initRedactor($tr);
     },
 
     bindColumnsTableChanges: function()
@@ -250,8 +194,13 @@ Craft.TableMaker = Garnish.Base.extend(
         // re-do columns of rowsTable
         for (var colId in this.columns)
         {
-            // force type of col to be textual
-            // this.columns[colId].type = 'singleline';
+            if (this.columns[colId].hasOwnProperty('fieldType')) {
+              this.columns[colId].type = this.columns[colId].fieldType;
+            } else {
+              // force type of col to be textual
+              this.columns[colId].type = 'singleline';
+            }
+
             tableHtml += '<th scope="col" class="header">'+(this.columns[colId].heading ? this.columns[colId].heading : '&nbsp;')+'</th>';
         }
 
@@ -266,6 +215,8 @@ Craft.TableMaker = Garnish.Base.extend(
 
         var $tbody = $('<tbody/>').appendTo($table);
 
+        var trs = [];
+
         // merge in the current rows content
         for (var rowId in this.rows)
         {
@@ -273,15 +224,19 @@ Craft.TableMaker = Garnish.Base.extend(
                 continue;
             }
 
-            Craft.EditableTable.createRow(rowId, this.columns, this.rowsTableName, this.rows[rowId]).appendTo($tbody);
+            trs.push(Craft.EditableTable.createRow(rowId, this.columns, this.rowsTableName, this.rows[rowId]).appendTo($tbody));
         }
-
 
         this.rowsTable.$table.replaceWith($table);
         this.rowsTable.destroy();
         delete this.rowsTable;
         this.initRowsTable(this.columns);
         this.makeDataBlob();
+
+      for (var i = 0; i<trs.length;i++)
+      {
+          this.initRedactor(trs[i]);
+      }
     },
 
     getDataFromTables: function()
@@ -333,6 +288,67 @@ Craft.TableMaker = Garnish.Base.extend(
         };
 
         this.$input.val(JSON.stringify(dataBlob));
+    },
+
+    initRedactor: function($tr)
+    {
+
+      var rowNum = $tr.data('id');
+
+      if (this.rows.hasOwnProperty(rowNum)) {
+        var textareas = $tr.find('.html-cell textarea');
+
+        for (var k = 0; k < textareas.length; k++) {
+          var handle = 'textarea-' + rowNum + '-' + k;
+
+          textareas[k].id = handle;
+
+          // todo replace hardcoded config
+          new Craft.RedactorInput({
+            "id": handle,
+            "linkOptions": [],
+            "volumes": [
+              "folder:2818c917-eabd-4984-bd00-6fd10907f2b1"
+            ],
+            "transforms": [],
+            "elementSiteId": "1",
+            "redactorConfig": {
+              "buttons": [
+                "html",
+                "format",
+                "bold",
+                "lists",
+                "link",
+                "file"
+              ],
+              "formatting": [
+                "p",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "h6"
+              ],
+              "formattingAdd": {
+                "highlighted-text": {
+                  "title": "Spitzmarke",
+                  "api": "module.inline.format",
+                  "args": {
+                    "tag": "p",
+                    "class": "dateline",
+                    "type": "toggle"
+                  }
+                }
+              },
+              "pastePlainText": true,
+              "toolbarFixed": true,
+              "linkNewTab": true
+            },
+            "redactorLang": "de",
+            "showAllUploaders": false
+          });
+        }
+      }
     }
 
 });
