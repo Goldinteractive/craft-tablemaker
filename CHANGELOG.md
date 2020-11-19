@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Added
+- Added the wysiwyg field type for rows (requires craftcms/redactor to be installed)
+
 ## 2.0.0 - 2018-04-12
 ### Added
 - Initial Craft CMS 3 release
