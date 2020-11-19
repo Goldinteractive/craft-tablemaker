@@ -303,7 +303,7 @@ class TableMakerField extends Field
                             'redactorConfig' => $plugin->redactor->getRedactorConfigFilename(),
                         ]);
 
-                        $colVal = $skeleton->getInputHtml($colVal);
+                        $colVal = $skeleton->getInputHtml($colVal, $element);
                     }
 
                     $rows['row'.$rowKey]['col'.$colKey] = $colVal;
@@ -323,7 +323,7 @@ class TableMakerField extends Field
 
         if ($isRedactorInstalled) {
             $fieldTypeOptions['html'] = Craft::t('tablemaker', 'Wysiwyg');
-            $redactorConfig = $plugin->redactor->getRedactorConfig();
+            $redactorConfig = $plugin->redactor->getRedactorConfig($element);
         }
 
         // prep col settings
