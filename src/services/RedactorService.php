@@ -16,6 +16,7 @@ use Craft;
 use craft\base\Component;
 use craft\base\Element;
 use craft\base\ElementInterface;
+use craft\elements\Asset;
 use craft\elements\Category;
 use craft\elements\Entry;
 use craft\helpers\Db;
@@ -138,6 +139,16 @@ class RedactorService extends Component
                 'elementType' => Entry::class,
                 'refHandle' => Entry::refHandle(),
                 'sources' => $sectionSources,
+                'criteria' => ['uri' => ':notempty:']
+            ];
+        }
+
+        if (!empty($this->_getVolumeKeys())) {
+            $linkOptions[] = [
+                'optionTitle' => Craft::t('redactor', 'Link to an asset'),
+                'elementType' => Asset::class,
+                'refHandle' => Asset::refHandle(),
+                'sources' => $this->_getVolumeKeys(),
             ];
         }
 
@@ -199,6 +210,10 @@ class RedactorService extends Component
 
         if ($showSingles) {
             array_unshift($sources, 'singles');
+        }
+
+        if (!empty($sources)) {
+            array_unshift($sources, '*');
         }
 
         return $sources;
@@ -303,5 +318,4 @@ class RedactorService extends Component
 
         return $transformList;
     }
-
 }
