@@ -11,6 +11,7 @@
 
 namespace supercool\tablemaker\fields;
 
+use craft\redactor\FieldData;
 use supercool\tablemaker\assetbundles\field\FieldAsset;
 
 use Craft;
@@ -189,6 +190,15 @@ class TableMakerField extends Field
      */
     public function serializeValue($value, ElementInterface $element = null)
     {
+        $plugin = TableMaker::getInstance();
+        $isRedactorInstalled = $plugin->redactor->isRedactorInstalled();
+
+        // // drop keys from the columns array
+        if ( !empty($value['columns']) && is_array($value['columns']) )
+        {
+            $value['columns'] = array_values($value['columns']);
+        }
+
         if ( !empty($value['rows']) && is_array($value['rows']) )
         {
             // drop keys from the rows array
@@ -202,13 +212,20 @@ class TableMakerField extends Field
                     // drop those array keys
                     $row = array_values($row);
                 }
-            }
-        }
 
-        // // drop keys from the columns array
-        if ( !empty($value['columns']) && is_array($value['columns']) )
-        {
-            $value['columns'] = array_values($value['columns']);
+                if (!empty($value['columns']) && is_array($value['columns'])) {
+                    if ($isRedactorInstalled) {
+                        foreach ($value['columns'] as $key => &$column) {
+                            // use redactors serialize function to parse ref tags
+                            if ($column['fieldType'] == 'html' && isset($row[$key])) {
+                                $field = new \craft\redactor\Field();
+                                $rowData = $field->normalizeValue($row[$key],$element);
+                                $row[$key] = $field->serializeValue($rowData,$element);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return parent::serializeValue($value, $element);
