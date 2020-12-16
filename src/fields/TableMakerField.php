@@ -217,7 +217,7 @@ class TableMakerField extends Field
                     if ($isRedactorInstalled) {
                         foreach ($value['columns'] as $key => &$column) {
                             // use redactors serialize function to parse ref tags
-                            if ($column['fieldType'] == 'html' && isset($row[$key])) {
+                            if (isset($column['fieldType']) && $column['fieldType'] == 'html' && isset($row[$key])) {
                                 $field = new \craft\redactor\Field();
                                 $rowData = $field->normalizeValue($row[$key],$element);
                                 $row[$key] = $field->serializeValue($rowData,$element);
