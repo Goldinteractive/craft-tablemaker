@@ -35,7 +35,7 @@
         "name": "Table Maker",
         "handle": "tablemaker",
         "schemaVersion": "1.0.0",
-        "hasCpSettings": false,
+        "hasCpSettings": true,
         "hasCpSection": false,
         "changelogUrl": "https://raw.githubusercontent.com/supercool/tablemaker/master/CHANGELOG.md",
         "class": "supercool\\tablemaker\\TableMaker"

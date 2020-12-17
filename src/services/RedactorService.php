@@ -25,6 +25,7 @@ use craft\helpers\Json;
 use craft\models\Section;
 use craft\redactor\assets\redactor\RedactorAsset;
 use craft\redactor\events\RegisterLinkOptionsEvent;
+use supercool\tablemaker\TableMaker;
 
 /**
  * Redactor service
@@ -59,13 +60,7 @@ class RedactorService extends Component
 
     public function getRedactorConfigFilename()
     {
-        $config = Craft::$app->config->getConfigFromFile('tablemaker');
-
-        if (isset($config['redactorConfig'])) {
-            return $config['redactorConfig'];
-        }
-
-        return null;
+        return TableMaker::$plugin->getSettings()->redactorConfig;
     }
 
     /**

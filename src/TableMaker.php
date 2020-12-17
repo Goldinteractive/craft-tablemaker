@@ -21,6 +21,7 @@ use craft\events\RegisterComponentTypesEvent;
 
 use supercool\tablemaker\fields\TableMakerField;
 
+use supercool\tablemaker\models\Settings;
 use supercool\tablemaker\services\RedactorService;
 use yii\base\Event;
 
@@ -65,4 +66,8 @@ class TableMaker extends Plugin
 
     }
 
+    protected function createSettingsModel()
+    {
+        return new Settings();
+    }
 }
