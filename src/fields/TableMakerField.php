@@ -336,6 +336,7 @@ class TableMakerField extends Field
 
         $fieldTypeOptions = [
             'singleline' => Craft::t('tablemaker', 'Text'),
+            'checkbox' => Craft::t('tablemaker', 'Lichtschalter'),
         ];
 
         if ($isRedactorInstalled) {
