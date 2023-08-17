@@ -8,7 +8,7 @@ class Settings extends Model
 {
     public $redactorConfig = null;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [['redactorConfig'], 'string'],

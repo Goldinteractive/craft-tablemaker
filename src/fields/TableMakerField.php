@@ -17,8 +17,6 @@ use yii\db\Schema;
 use craft\helpers\Json;
 use craft\helpers\Template;
 
-use yii\db\Schema;
-
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 
@@ -52,7 +50,7 @@ class TableMakerField extends Field
         return Schema::TYPE_TEXT;
     }
 
-    public function normalizeValue(mixed $value, ElementInterface $element = null): mixed
+    public function normalizeValue(mixed $value, ?\craft\base\ElementInterface $element = null): mixed
     {
         if (!is_array($value)) {
             $value = Json::decode($value);
@@ -107,7 +105,7 @@ class TableMakerField extends Field
         return $value;
     }
 
-    public function serializeValue(mixed $value, ElementInterface $element = null): mixed
+    public function serializeValue(mixed $value, ?\craft\base\ElementInterface $element = null): mixed
     {
         $plugin = TableMaker::getInstance();
         $isRedactorInstalled = $plugin->redactor->isRedactorInstalled();
@@ -151,7 +149,7 @@ class TableMakerField extends Field
         ]);
     }
 
-    public function getInputHtml(mixed $value, ElementInterface $element = null): string
+    public function getInputHtml(mixed $value, ?\craft\base\ElementInterface $element = null): string
     {
         $view = Craft::$app->getView();
         $plugin = TableMaker::getInstance();
