@@ -1,28 +1,15 @@
 <?php
+namespace verbb\tablemaker;
 
-/**
- * Table Maker plugin for Craft CMS 3.x
- *
- * A user-definable table field type for Craft CMS
- *
- * @link      http://www.supercooldesign.co.uk/
- * @copyright Copyright (c) 2018 Supercool Ltd
- */
+use verbb\tablemaker\base\PluginTrait;
+use verbb\tablemaker\fields\TableMakerField;
 
-namespace supercool\tablemaker;
-
-
-use Craft;
 use craft\base\Plugin;
-use craft\services\Plugins;
-use craft\events\PluginEvent;
 use craft\services\Fields;
 use craft\events\RegisterComponentTypesEvent;
 
-use supercool\tablemaker\fields\TableMakerField;
-
-use supercool\tablemaker\models\Settings;
-use supercool\tablemaker\services\RedactorService;
+use verbb\tablemaker\models\Settings;
+use verbb\tablemaker\services\RedactorService;
 use yii\base\Event;
 
 /**
@@ -35,10 +22,17 @@ use yii\base\Event;
 
 class TableMaker extends Plugin
 {
-    // Static Properties
+    // Properties
     // =========================================================================
 
-    public static $plugin;
+    public string $schemaVersion = '3.0.0';
+    public string $minVersionRequired = '3.0.0';
+
+
+    // Traits
+    // =========================================================================
+
+    use PluginTrait;
 
 
     // Public Methods
@@ -47,6 +41,7 @@ class TableMaker extends Plugin
     public function init()
     {
         parent::init();
+
         self::$plugin = $this;
 
         $this->setComponents(
@@ -55,19 +50,23 @@ class TableMaker extends Plugin
             ]
         );
 
-        // Register our fields
-        Event::on(
-            Fields::class,
-            Fields::EVENT_REGISTER_FIELD_TYPES,
-            function (RegisterComponentTypesEvent $event) {
-                $event->types[] = TableMakerField::class;
-            }
-        );
-
+        $this->_setPluginComponents();
+        $this->_setLogging();
+        $this->_registerFieldTypes();
     }
 
     protected function createSettingsModel()
     {
         return new Settings();
+    }
+
+    // Private Methods
+    // =========================================================================
+
+    private function _registerFieldTypes()
+    {
+        Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function(RegisterComponentTypesEvent $event) {
+            $event->types[] = TableMakerField::class;
+        });
     }
 }

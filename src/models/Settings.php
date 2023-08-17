@@ -1,6 +1,6 @@
 <?php
 
-namespace supercool\tablemaker\models;
+namespace verbb\tablemaker\models;
 
 use craft\base\Model;
 

@@ -1,15 +1,6 @@
 <?php
 
-/**
- * Table Maker plugin for Craft CMS 3.x
- *
- * A user-definable table field type for Craft CMS
- *
- * @link      http://www.supercooldesign.co.uk/
- * @copyright Copyright (c) 2018 Supercool Ltd
- */
-
-namespace supercool\tablemaker\services;
+namespace verbb\tablemaker\services;
 
 use Craft;
 
@@ -25,7 +16,7 @@ use craft\helpers\Json;
 use craft\models\Section;
 use craft\redactor\assets\redactor\RedactorAsset;
 use craft\redactor\events\RegisterLinkOptionsEvent;
-use supercool\tablemaker\TableMaker;
+use verbb\tablemaker\TableMaker;
 
 /**
  * Redactor service
