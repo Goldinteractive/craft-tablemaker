@@ -4,7 +4,7 @@ namespace verbb\tablemaker\fields;
 namespace verbb\tablemaker\fields;
 
 use craft\redactor\FieldData;
-use verbb\tablemaker\assetbundles\field\FieldAsset;
+use verbb\tablemaker\assetbundles\FieldAsset;
 
 use Craft;
 use craft\base\ElementInterface;

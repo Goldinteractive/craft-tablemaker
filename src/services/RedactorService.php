@@ -290,7 +290,7 @@ class RedactorService extends Component
             return [];
         }
 
-        $allTransforms = Craft::$app->getAssetTransforms()->getAllTransforms();
+        $allTransforms = Craft::$app->getImageTransforms()->getAllTransforms();
         $transformList = [];
 
         foreach ($allTransforms as $transform) {

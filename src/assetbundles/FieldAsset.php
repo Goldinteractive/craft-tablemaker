@@ -13,7 +13,7 @@ class FieldAsset extends AssetBundle
 
     public function init()
     {
-        $this->sourcePath = "@verbb/tablemaker/resources/dist";
+        $this->sourcePath = "@verbb/tablemaker/resources/src";
 
         $this->depends = [
             VerbbCpAsset::class,
