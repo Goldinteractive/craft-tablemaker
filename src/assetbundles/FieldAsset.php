@@ -21,7 +21,7 @@ class FieldAsset extends AssetBundle
         ];
 
         $this->css = [
-            'css/tablemaker.css',
+//            'css/tablemaker.css',
         ];
 
         $this->js = [

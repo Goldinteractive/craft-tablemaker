@@ -68,12 +68,21 @@ class RedactorService extends Component
         $bundle = $view->getAssetManager()->getBundle(RedactorAsset::class);
         $redactorLang = $bundle::$redactorLanguage ?? 'en';
 
+        $allSites = [];
+        foreach (Craft::$app->getSites()->getAllSites(false) as $siteItem) {
+            $allSites[$siteItem->id] = $siteItem->name;
+        }
+
+        $defaultTransform = '';
+
         return [
             'id'               => null, // is set in js
             'linkOptions'      => $this->_getLinkOptions($element),
             'volumes'          => $this->_getVolumeKeys(),
             'transforms'       => $this->_getTransforms(),
+            'defaultTransform' => $defaultTransform,
             'elementSiteId'    => $site->id,
+            'allSites'         => $allSites,
             'redactorConfig'   => $redactorEditorConfig,
             'redactorLang'     => $redactorLang,
             'showAllUploaders' => false,
@@ -103,16 +112,16 @@ class RedactorService extends Component
     /**
      * Returns the link options available to the field.
      * Each link option is represented by an array with the following keys:
-     * - `optionTitle` (required) – the user-facing option title that appears in the Link dropdown menu
-     * - `elementType` (required) – the element type class that the option should be linking to
-     * - `sources` (optional) – the sources that the user should be able to select elements from
-     * - `criteria` (optional) – any specific element criteria parameters that should limit which elements the user can select
-     * - `storageKey` (optional) – the localStorage key that should be used to store the element selector modal state (defaults to RedactorInput.LinkTo[ElementType])
+     * - `optionTitle` (required) – the user-facing option title that appears in the Link dropdown menu
+     * - `elementType` (required) – the element type class that the option should be linking to
+     * - `sources` (optional) – the sources that the user should be able to select elements from
+     * - `criteria` (optional) – any specific element criteria parameters that should limit which elements the user can select
+     * - `storageKey` (optional) – the localStorage key that should be used to store the element selector modal state (defaults to RedactorInput.LinkTo[ElementType])
      *
-     * @param Element|null $element The element the field is associated with, if there is one
+     * @param ElementInterface|null $element The element the field is associated with, if there is one
      * @return array
      */
-    private function _getLinkOptions(Element $element = null): array
+    private function _getLinkOptions(ElementInterface $element = null): array
     {
         $linkOptions = [];
 
@@ -125,7 +134,7 @@ class RedactorService extends Component
                 'elementType' => Entry::class,
                 'refHandle' => Entry::refHandle(),
                 'sources' => $sectionSources,
-                'criteria' => ['uri' => ':notempty:']
+                'criteria' => ['uri' => ':notempty:'],
             ];
         }
 
@@ -149,7 +158,7 @@ class RedactorService extends Component
 
         // Give plugins a chance to add their own
         $event = new RegisterLinkOptionsEvent([
-            'linkOptions' => $linkOptions
+            'linkOptions' => $linkOptions,
         ]);
         $this->trigger(self::EVENT_REGISTER_LINK_OPTIONS, $event);
         $linkOptions = $event->linkOptions;
@@ -169,10 +178,10 @@ class RedactorService extends Component
     /**
      * Returns the available section sources.
      *
-     * @param Element|null $element The element the field is associated with, if there is one
+     * @param ElementInterface|null $element The element the field is associated with, if there is one
      * @return array
      */
-    private function _getSectionSources(Element $element = null): array
+    private function _getSectionSources(ElementInterface $element = null): array
     {
         $sources = [];
         $sections = Craft::$app->getSections()->getAllSections();
@@ -184,7 +193,7 @@ class RedactorService extends Component
         foreach ($sections as $section) {
             if ($section->type === Section::TYPE_SINGLE) {
                 $showSingles = true;
-            } else if ($element) {
+            } elseif ($element) {
                 $sectionSiteSettings = $section->getSiteSettings();
                 foreach ($sites as $site) {
                     if (isset($sectionSiteSettings[$site->id]) && $sectionSiteSettings[$site->id]->hasUrls) {
@@ -208,10 +217,10 @@ class RedactorService extends Component
     /**
      * Returns the available category sources.
      *
-     * @param Element|null $element The element the field is associated with, if there is one
+     * @param ElementInterface|null $element The element the field is associated with, if there is one
      * @return array
      */
-    private function _getCategorySources(Element $element = null): array
+    private function _getCategorySources(ElementInterface $element = null): array
     {
         $sources = [];
 
@@ -249,34 +258,12 @@ class RedactorService extends Component
 
         foreach ($allVolumes as $volume) {
             $allowedBySettings = $this->availableVolumes === '*' || (is_array($this->availableVolumes) && in_array($volume->uid, $this->availableVolumes));
-            if ($allowedBySettings && ($this->showUnpermittedVolumes || $userService->checkPermission("viewVolume:{$volume->uid}"))) {
-                $allowedVolumes[] = $volume->uid;
+            if ($allowedBySettings && ($this->showUnpermittedVolumes || $userService->checkPermission("viewAssets:$volume->uid"))) {
+                $allowedVolumes[] = 'volume:' . $volume->uid;
             }
         }
 
-        $criteria['volumeId'] = Db::idsByUids('{{%volumes}}', $allowedVolumes);
-
-        $folders = Craft::$app->getAssets()->findFolders($criteria);
-
-        // Sort volumes in the same order as they are sorted in the CP
-        $sortedVolumeIds = Craft::$app->getVolumes()->getAllVolumeIds();
-        $sortedVolumeIds = array_flip($sortedVolumeIds);
-
-        $volumeKeys = [];
-
-        usort($folders, function($a, $b) use ($sortedVolumeIds) {
-            // In case Temporary volumes ever make an appearance in RTF modals, sort them to the end of the list.
-            $aOrder = $sortedVolumeIds[$a->volumeId] ?? PHP_INT_MAX;
-            $bOrder = $sortedVolumeIds[$b->volumeId] ?? PHP_INT_MAX;
-
-            return $aOrder - $bOrder;
-        });
-
-        foreach ($folders as $folder) {
-            $volumeKeys[] = 'folder:' . $folder->uid;
-        }
-
-        return $volumeKeys;
+        return $allowedVolumes;
     }
 
     /**
@@ -296,8 +283,8 @@ class RedactorService extends Component
         foreach ($allTransforms as $transform) {
             if (!is_array($this->availableTransforms) || in_array($transform->uid, $this->availableTransforms, false)) {
                 $transformList[] = [
-                    'handle' => Html::encode($transform->handle),
-                    'name' => Html::encode($transform->name)
+                    'handle' => $transform->handle,
+                    'name' => $transform->name,
                 ];
             }
         }
