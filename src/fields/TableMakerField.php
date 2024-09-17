@@ -156,8 +156,8 @@ class TableMakerField extends Field
 
         $isRedactorInstalled = $plugin->redactor->isRedactorInstalled();
 
-        // Register our asset bundle
         $view->registerAssetBundle(FieldAsset::class);
+        $view->registerAssetBundle(\craft\redactor\assets\field\FieldAsset::class);
 
         $name = $this->handle;
 
