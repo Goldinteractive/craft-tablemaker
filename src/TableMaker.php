@@ -50,8 +50,6 @@ class TableMaker extends Plugin
             ]
         );
 
-        $this->_setPluginComponents();
-        $this->_setLogging();
         $this->_registerFieldTypes();
     }
 

@@ -184,7 +184,7 @@ class RedactorService extends Component
     private function _getSectionSources(ElementInterface $element = null): array
     {
         $sources = [];
-        $sections = Craft::$app->getSections()->getAllSections();
+        $sections = Craft::$app->getEntries()->getAllSections();
         $showSingles = false;
 
         // Get all sites
